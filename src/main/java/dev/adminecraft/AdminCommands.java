@@ -131,8 +131,28 @@ public final class AdminCommands {
 				return removed ? 1 : 0;
 			}))));
 
+		root.then(adminChatNode("chat"));
+
 		LiteralCommandNode<ServerCommandSource> node = dispatcher.register(root);
 		dispatcher.register(literal("ae").redirect(node));
+		dispatcher.register(adminChatNode("ac"));
+	}
+
+	/** /ac <message> sends to admin chat; bare /ac toggles sending all your normal chat there. */
+	private static LiteralArgumentBuilder<ServerCommandSource> adminChatNode(String name) {
+		return literal(name).requires(AdminCommands::isAdmin)
+			.executes(ctx -> {
+				ServerPlayerEntity p = ctx.getSource().getPlayerOrThrow();
+				boolean on = AdminChat.toggle(p.getUuid());
+				ok(ctx.getSource(), "Admin chat mode " + (on ? "ON: your chat is only visible to admins." : "OFF."));
+				return 1;
+			})
+			.then(argument("message", StringArgumentType.greedyString()).executes(ctx -> {
+				ServerCommandSource src = ctx.getSource();
+				AdminChat.send(src.getServer(), Text.literal("<" + src.getName() + "> "
+					+ StringArgumentType.getString(ctx, "message")));
+				return 1;
+			}));
 	}
 
 	private static int vote(ServerCommandSource src, boolean yes) throws com.mojang.brigadier.exceptions.CommandSyntaxException {

@@ -3,6 +3,7 @@ package dev.adminecraft;
 import com.mojang.authlib.GameProfile;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -38,25 +39,43 @@ public class ADMINecraft implements ModInitializer {
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) ->
 			Flight.apply(newPlayer.getServer(), newPlayer));
 
-		ServerLifecycleEvents.SERVER_STARTED.register(server ->
-			STORE.load(server.getSavePath(WorldSavePath.ROOT).resolve("adminecraft_admins.json")));
+		ModEntities.register();
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+			STORE.load(server.getSavePath(WorldSavePath.ROOT).resolve("adminecraft_admins.json"));
+			DebugPlayerEntity.loadCounter(server.getSavePath(WorldSavePath.ROOT).resolve("adminecraft_debug_counter.txt"));
+		});
+		ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, params) -> {
+			if (!AdminChat.isOn(sender.getUuid())) return true;
+			MinecraftServer server = sender.getServer();
+			if (!STORE.isAdmin(server, sender.getGameProfile())) {
+				AdminChat.off(sender.getUuid());
+				return true;
+			}
+			AdminChat.send(server, Text.literal("<" + sender.getName().getString() + "> ").append(message.getContent()));
+			return false; // keep it out of public chat
+		});
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> STORE.save());
 		ServerTickEvents.END_SERVER_TICK.register(ELECTIONS::tick);
 		CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) -> AdminCommands.register(dispatcher));
 
 		// Punching a player with a Ban Stick bans them.
 		AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
-			if (world.isClient || !(player instanceof ServerPlayerEntity admin) || !(entity instanceof ServerPlayerEntity target)) {
-				return ActionResult.PASS;
-			}
+			if (world.isClient || !(player instanceof ServerPlayerEntity admin)) return ActionResult.PASS;
 			BanDuration duration = BanStick.read(admin.getStackInHand(hand));
 			if (duration == null) return ActionResult.PASS;
+			if (!(entity instanceof ServerPlayerEntity) && !(entity instanceof DebugPlayerEntity)) return ActionResult.PASS;
 
 			MinecraftServer server = admin.getServer();
 			if (!STORE.isAdmin(server, admin.getGameProfile())) {
 				admin.sendMessage(Text.literal("Only admins can use a Ban Stick.").formatted(Formatting.RED), true);
 				return ActionResult.FAIL;
 			}
+			if (entity instanceof DebugPlayerEntity dummy) {
+				AdminChat.send(server, Text.literal("Debug player #" + dummy.getNumber() + " got banned for " + duration.label));
+				dummy.discard();
+				return ActionResult.FAIL;
+			}
+			ServerPlayerEntity target = (ServerPlayerEntity) entity;
 			if (STORE.isAdmin(server, target.getGameProfile())) {
 				admin.sendMessage(Text.literal("You can't ban another admin.").formatted(Formatting.RED), true);
 				return ActionResult.FAIL;

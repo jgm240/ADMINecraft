@@ -1,0 +1,10 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "adminecraft:item/debug_player_spawn_egg",
+    "tints": [
+      { "type": "minecraft:constant", "value": 13544488 },
+      { "type": "minecraft:constant", "value": 9127187 }
+    ]
+  }
+}

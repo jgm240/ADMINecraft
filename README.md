@@ -36,3 +36,9 @@ Drop the jar (plus Fabric API) in `mods/`.
 
 Every GUI action is re-validated on the server, so non-admins can't trigger admin actions by faking packets.
 Ban Sticks cancel the hit on players (they ban instead of damage), so enchants matter when hitting mobs.
+
+## Admin chat & testing
+
+- `/ac <message>` (or `/ae chat <message>`) sends to a chat only admins can see. Bare `/ac` toggles it for all your normal chat.
+- **Debug Player** (Spawn Eggs tab): a wandering fake player with a hay-bale skin, numbered per world. Hit one with a Ban Stick and admins see
+  `Debug player #N got banned for <duration>` in admin chat; the dummy is removed.

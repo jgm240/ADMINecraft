@@ -1,4 +1,6 @@
 {
   "key.adminecraft.open": "Open ADMINecraft menu",
-  "category.adminecraft": "ADMINecraft"
+  "category.adminecraft": "ADMINecraft",
+  "entity.adminecraft.debug_player": "Debug Player",
+  "item.adminecraft.debug_player_spawn_egg": "Debug Player Spawn Egg"
 }
