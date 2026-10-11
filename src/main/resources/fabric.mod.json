@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "adminecraft",
+  "version": "${version}",
+  "name": "ADMINecraft",
+  "description": "Elect admins by vote and enforce the law with Ban Sticks of different durations.",
+  "authors": ["ADMINecraft"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.adminecraft.ADMINecraft"],
+    "client": ["dev.adminecraft.ADMINecraftClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.4",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
